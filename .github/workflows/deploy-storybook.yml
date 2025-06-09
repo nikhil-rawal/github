@@ -1,82 +1,47 @@
-# .github/workflows/deploy-storybook.yml
-
 # Workflow name, visible in the 'Actions' tab on GitHub
 name: Deploy Storybook to GitHub Pages
 
-# ---
-# Event Trigger: When to run this workflow
-# ---
 on:
   push:
     branches:
-      # The branch that triggers the deployment.
-      # Change 'main' to 'master' if that's your primary branch.
       - "main"
 
-# ---
-# Permissions: Required for GitHub Actions to interact with Pages
-# ---
 permissions:
-  contents: read # Allows the action to read your repository's code
-  pages: write # Grants permission to deploy to GitHub Pages
-  id-token: write # Required for the OIDC token used by deploy-pages action
+  contents: read
+  pages: write
+  id-token: write
 
-# ---
-# Jobs: Define the tasks to be performed
-# ---
 jobs:
   deploy:
-    # The runner environment where the job will execute
     runs-on: ubuntu-latest
 
-    # Steps: A sequence of tasks within this job
     steps:
-      # 1. Checkout the repository code
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Fetch all history for proper build and asset handling (important for Storybook)
           fetch-depth: 0
 
-      # 2. Set up Node.js environment
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          # Specify your Node.js version. Change '20' to match your project's version (e.g., '18').
-          # You can also use 'node-version-file: "package.json"' if your package.json defines it.
           node-version: "20"
-          # Cache npm dependencies for faster installs.
-          # Change 'npm' to 'yarn' or 'pnpm' if you use a different package manager.
           cache: "npm"
-          # If using npm, provide the path to your lock file for consistent caching.
-          cache-dependency-path: "package-lock.json" # Change to 'yarn.lock' or 'pnpm-lock.yaml' if needed.
+          cache-dependency-path: "package-lock.json"
 
-      # 3. Install project dependencies
       - name: Install dependencies
-        # 'npm ci' is recommended for CI/CD environments as it uses package-lock.json for exact installs.
-        # Change to 'yarn install --frozen-lockfile' or 'pnpm install --frozen-lockfile' if using other managers.
         run: npm ci
 
-      # 4. Build Storybook into static files
       - name: Build Storybook
-        # Sets NODE_ENV to production for optimized Storybook build.
-        # Ensure 'build-storybook' script exists in your package.json.
         run: NODE_ENV=production npm run build-storybook
 
-      # 5. Configure GitHub Pages environment
-      # This action sets up the environment for deploying to GitHub Pages.
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # 6. Upload the built Storybook as an artifact
-      # The 'path' must match the output directory of your 'build-storybook' command.
-      # By default, Storybook builds to the 'storybook-static' folder.
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "storybook-static" # Do NOT add a leading '/' or './' here.
+          path: "storybook-static"
 
-      # 7. Deploy the uploaded artifact to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
